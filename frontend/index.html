@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>축의금 조회</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Wedding Gift Lookup</p>
+          <h1>축의금 조회 및 연락처 메모 관리</h1>
+          <p class="lead">
+            정적 프론트엔드 + Google Apps Script API 기반 프로토타입입니다.
+          </p>
+        </div>
+        <div class="privacy-card">
+          <strong>개인정보 주의</strong>
+          <p>
+            GitHub Pages에는 프론트엔드만 올리고, 실제 시트 접근은 Apps Script
+            백엔드로만 처리하세요.
+          </p>
+        </div>
+      </header>
+
+      <section class="panel search-panel">
+        <div class="search-row">
+          <input
+            id="searchInput"
+            type="search"
+            placeholder="이름, 은행, 계좌번호, 전화번호, 메모로 검색"
+          />
+          <button id="searchButton">검색</button>
+          <button id="refreshButton" class="secondary">최신 목록</button>
+        </div>
+        <p class="hint">
+          예: 예금주명, 계좌번호 끝자리, 전화번호, 메모 키워드
+        </p>
+        <p id="statusMessage" class="status">준비됨</p>
+      </section>
+
+      <section class="content-grid">
+        <section class="panel results-panel">
+          <div class="panel-header">
+            <h2>검색 결과</h2>
+            <span id="resultCount">0건</span>
+          </div>
+          <ul id="resultsList" class="results-list"></ul>
+        </section>
+
+        <section class="panel form-panel">
+          <div class="panel-header">
+            <h2>기록 수정</h2>
+            <span id="selectedId">선택 없음</span>
+          </div>
+
+          <form id="recordForm" class="record-form">
+            <input type="hidden" id="recordId" />
+
+            <label>
+              <span>거래일시</span>
+              <input id="dateTime" type="text" readonly />
+            </label>
+
+            <label>
+              <span>출금</span>
+              <input id="amount" type="text" readonly />
+            </label>
+
+            <label>
+              <span>거래내용</span>
+              <input id="description" type="text" />
+            </label>
+
+            <label>
+              <span>상대은행</span>
+              <input id="bank" type="text" />
+            </label>
+
+            <label>
+              <span>상대계좌번호</span>
+              <input id="accountNumber" type="text" />
+            </label>
+
+            <label>
+              <span>상대계좌예금주명</span>
+              <input id="accountHolder" type="text" />
+            </label>
+
+            <label>
+              <span>전화번호</span>
+              <input id="phone" type="tel" placeholder="010-1234-5678" />
+            </label>
+
+            <label>
+              <span>메모</span>
+              <textarea id="memo" rows="5" placeholder="비고를 적어주세요"></textarea>
+            </label>
+
+            <div class="form-actions">
+              <button type="submit">저장</button>
+              <button type="button" id="resetButton" class="secondary">초기화</button>
+            </div>
+          </form>
+        </section>
+      </section>
+    </main>
+
+    <script src="./config.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

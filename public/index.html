@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>축의금 조회</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Wedding Gift Lookup</p>
+          <h1>축의금 조회 / 연락처 정리</h1>
+          <p class="lead">시놀로지 NAS 한 컨테이너로 배포할 수 있는 공개 검색·연락처 정리 앱입니다. 누구나 조회할 수 있고, 공개 사용자는 전화번호만 수정할 수 있습니다.</p>
+        </div>
+        <div class="privacy-card">
+          <strong>개인정보 주의</strong>
+          <p>외부 공개는 리버스 프록시 + HTTPS 뒤에서만 하세요. 일반 사용자 화면에서는 계좌번호를 마스킹하고 메모를 숨깁니다.</p>
+        </div>
+      </header>
+
+      <section class="panel auth-panel">
+        <div class="panel-header">
+          <h2>관리자 로그인</h2>
+          <span id="roleBadge" class="badge">guest</span>
+        </div>
+        <div class="auth-row">
+          <input id="accessCode" type="password" placeholder="관리자 또는 기존 사용자 코드를 입력하세요" />
+          <button id="loginButton">권한 전환</button>
+          <button id="logoutButton" class="secondary">로그아웃</button>
+        </div>
+        <p class="hint">기본 사용은 로그인 없이 가능합니다. 관리자만 로그인해서 추가 필드를 수정하세요.</p>
+      </section>
+
+      <section class="panel search-panel">
+        <div class="search-row">
+          <input id="searchInput" type="search" placeholder="이름, 은행, 계좌번호, 전화번호 등으로 검색" />
+          <button id="searchButton">검색</button>
+          <button id="refreshButton" class="secondary">최신 목록</button>
+        </div>
+        <p id="statusMessage" class="status">준비됨</p>
+      </section>
+
+      <section class="content-grid">
+        <section class="panel results-panel">
+          <div class="panel-header">
+            <h2>검색 결과</h2>
+            <span id="resultCount">0건</span>
+          </div>
+          <ul id="resultsList" class="results-list"></ul>
+        </section>
+
+        <section class="panel form-panel">
+          <div class="panel-header">
+            <h2>기록 수정</h2>
+            <span id="selectedId">선택 없음</span>
+          </div>
+          <form id="recordForm" class="record-form">
+            <input type="hidden" id="recordId" />
+            <label><span>거래일시</span><input id="dateTime" type="text" readonly /></label>
+            <label><span>출금</span><input id="amount" type="text" readonly /></label>
+            <label><span>거래내용</span><input id="description" type="text" /></label>
+            <label><span>상대은행</span><input id="bank" type="text" /></label>
+            <label><span>상대계좌번호</span><input id="accountNumber" type="text" /></label>
+            <label><span>상대계좌예금주명</span><input id="accountHolder" type="text" /></label>
+            <label><span>전화번호</span><input id="phone" type="tel" placeholder="010-1234-5678" /></label>
+            <label><span>메모</span><textarea id="memo" rows="5" placeholder="관리자 메모"></textarea></label>
+            <div class="form-actions">
+              <button type="submit">저장</button>
+              <button type="button" id="resetButton" class="secondary">초기화</button>
+            </div>
+          </form>
+          <p id="permissionHint" class="hint"></p>
+        </section>
+      </section>
+    </main>
+    <script src="/app.js"></script>
+  </body>
+</html>
