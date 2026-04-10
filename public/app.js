@@ -7,6 +7,7 @@ const els = {
   resultsList: document.getElementById('resultsList'),
   resultCount: document.getElementById('resultCount'),
   statusMessage: document.getElementById('statusMessage'),
+  formStatusMessage: document.getElementById('formStatusMessage'),
   selectedId: document.getElementById('selectedId'),
   permissionHint: document.getElementById('permissionHint'),
   recordForm: document.getElementById('recordForm'),
@@ -25,6 +26,11 @@ const els = {
 function setStatus(message, type = '') {
   els.statusMessage.textContent = message;
   els.statusMessage.className = `status ${type}`.trim();
+}
+
+function setFormStatus(message, type = '') {
+  els.formStatusMessage.textContent = message;
+  els.formStatusMessage.className = `status form-status ${type}`.trim();
 }
 
 async function api(path, options = {}) {
@@ -70,7 +76,7 @@ function renderResults() {
     </li>`).join('');
   document.querySelectorAll('.result-item').forEach((item) => item.addEventListener('click', () => {
     const record = state.records.find((entry) => entry.id === item.dataset.id);
-    if (record) selectRecord(record);
+    if (record) selectRecord(record, { scroll: true });
   }));
 }
 
@@ -79,10 +85,11 @@ function resetForm() {
   els.selectedId.textContent = '선택 없음';
   els.recordForm.reset();
   els.recordId.value = '';
+  setFormStatus('');
   renderResults();
 }
 
-function selectRecord(record) {
+function selectRecord(record, options = {}) {
   state.selected = record;
   els.selectedId.textContent = record.id;
   els.recordId.value = record.id || '';
@@ -94,7 +101,11 @@ function selectRecord(record) {
   els.accountHolder.value = record['상대계좌예금주명'] || '';
   els.phone.value = getPhoneSubscriberDigits(record['전화번호'] || '');
   els.memo.value = record['메모'] || '';
+  setFormStatus('선택한 기록을 수정할 수 있습니다.', 'success');
   renderResults();
+  if (options.scroll && window.matchMedia('(max-width: 900px)').matches) {
+    document.querySelector('.form-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 }
 
 async function loadConfig() {
@@ -138,16 +149,22 @@ function normalizePhoneInput() {
 
 async function handleSubmit(event) {
   event.preventDefault();
-  if (!els.recordId.value) return setStatus('먼저 기록을 선택해주세요.', 'error');
+  if (!els.recordId.value) {
+    setStatus('먼저 기록을 선택해주세요.', 'error');
+    return setFormStatus('먼저 왼쪽 목록에서 기록을 선택해주세요.', 'error');
+  }
   try {
     setStatus('저장 중...');
+    setFormStatus('저장 중...');
     const data = await api(`/api/records/${encodeURIComponent(els.recordId.value)}`, { method: 'PATCH', body: JSON.stringify(getPayload()) });
     const index = state.records.findIndex((record) => record.id === data.record.id);
     if (index !== -1) state.records[index] = data.record;
     selectRecord(data.record);
     setStatus('저장되었습니다.', 'success');
+    setFormStatus('저장되었습니다.', 'success');
   } catch (error) {
     setStatus(error.message, 'error');
+    setFormStatus(error.message, 'error');
   }
 }
 
