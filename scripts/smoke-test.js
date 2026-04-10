@@ -44,34 +44,25 @@ function request(method, path, body, headers = {}) {
     const parsed = JSON.parse(list.body);
     if (!Array.isArray(parsed.records) || !parsed.records.length) throw new Error('no records returned');
     const record = parsed.records[0];
-    if (!String(record['상대계좌번호'] || '').includes('*')) throw new Error('account number was not masked for public users');
-    if (record['메모']) throw new Error('memo was exposed to public users');
+    if (String(record['상대계좌번호'] || '').includes('*')) throw new Error('account number should be editable and unmasked');
+    if (!record['메모']) throw new Error('memo should be visible to public users');
 
     const phoneUpdate = await request(
       'PATCH',
       `/api/records/${encodeURIComponent(record.id)}`,
-      JSON.stringify({ '전화번호': '01099998888', '메모': 'should-not-apply' }),
+      JSON.stringify({ '전화번호': '8888', '메모': 'public memo update' }),
       { 'Content-Type': 'application/json' }
     );
     if (phoneUpdate.status !== 200) throw new Error('public phone update failed');
     const updated = JSON.parse(phoneUpdate.body).record;
-    if (updated['전화번호'] !== '010-9999-8888') throw new Error('phone update was not applied');
-    if (updated['메모']) throw new Error('memo was returned after public update');
+    if (updated['전화번호'] !== '010-****-8888') throw new Error('phone update was not applied');
+    if (updated['메모'] !== 'public memo update') throw new Error('memo update was not applied');
 
     const verify = await request('GET', `/api/records/${encodeURIComponent(record.id)}`);
     if (verify.status !== 200) throw new Error('record fetch failed');
     const verifiedRecord = JSON.parse(verify.body).record;
-    if (verifiedRecord['전화번호'] !== '010-9999-8888') throw new Error('phone update did not persist');
-    if (verifiedRecord['메모']) throw new Error('memo was exposed on detail view');
-
-    const login = await request('POST', '/api/auth/login', JSON.stringify({ code: 'admin-code' }), { 'Content-Type': 'application/json' });
-    if (login.status !== 200) throw new Error('admin login failed');
-    const cookie = login.headers['set-cookie']?.[0]?.split(';')[0];
-    const adminDetail = await request('GET', `/api/records/${encodeURIComponent(record.id)}`, null, { Cookie: cookie });
-    if (adminDetail.status !== 200) throw new Error('admin detail fetch failed');
-    const adminRecord = JSON.parse(adminDetail.body).record;
-    if (String(adminRecord['상대계좌번호'] || '').includes('*')) throw new Error('admin should receive unmasked account number');
-    if (adminRecord['메모'] !== '신랑측 가족') throw new Error('public update should not modify memo');
+    if (verifiedRecord['전화번호'] !== '010-****-8888') throw new Error('phone update did not persist');
+    if (verifiedRecord['메모'] !== 'public memo update') throw new Error('memo update did not persist');
     console.log('Smoke test passed');
   } finally {
     child.kill('SIGTERM');

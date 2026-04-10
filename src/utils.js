@@ -27,31 +27,20 @@ function normalizePhone(value) {
 
 function formatPhone(value) {
   const digits = normalizePhone(value);
+  if (digits.length === 4) return `010-****-${digits}`;
   if (digits.length === 11) return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
   if (digits.length === 10) return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
   return String(value || '').trim();
 }
 
 function validatePhone(value) {
+  if (String(value || '').trim() === '') return true;
   const digits = normalizePhone(value);
-  return digits === '' || /^01[0-9]\d{7,8}$/.test(digits);
-}
-
-function maskAccountNumber(value) {
-  const raw = String(value || '');
-  const digits = raw.replace(/[^0-9]/g, '');
-  if (digits.length < 5) return raw;
-  const masked = `${digits.slice(0, 3)}-${'*'.repeat(Math.max(digits.length - 5, 3))}${digits.slice(-2)}`;
-  return masked;
+  return /^\d{4}$/.test(digits);
 }
 
 function sanitizeRecord(record, role) {
-  const base = { ...record };
-  if (role !== 'admin') {
-    base['상대계좌번호'] = maskAccountNumber(base['상대계좌번호']);
-    base['메모'] = '';
-  }
-  return base;
+  return { ...record };
 }
 
 module.exports = {

@@ -20,17 +20,16 @@
         </div>
       </header>
 
-      <section class="panel auth-panel">
+      <section class="panel auth-panel" hidden>
         <div class="panel-header">
-          <h2>관리자 로그인</h2>
-          <span id="roleBadge" class="badge">guest</span>
+          <h2>접근 권한</h2>
+          <span id="roleBadge" class="badge">public</span>
         </div>
         <div class="auth-row">
-          <input id="accessCode" type="password" placeholder="관리자 또는 기존 사용자 코드를 입력하세요" />
+          <input id="accessCode" type="password" />
           <button id="loginButton">권한 전환</button>
           <button id="logoutButton" class="secondary">로그아웃</button>
         </div>
-        <p class="hint">기본 사용은 로그인 없이 가능합니다. 관리자만 로그인해서 추가 필드를 수정하세요.</p>
       </section>
 
       <section class="panel search-panel">
@@ -64,7 +63,7 @@
             <label><span>상대은행</span><input id="bank" type="text" /></label>
             <label><span>상대계좌번호</span><input id="accountNumber" type="text" /></label>
             <label><span>상대계좌예금주명</span><input id="accountHolder" type="text" /></label>
-            <label><span>전화번호</span><input id="phone" type="tel" placeholder="010-1234-5678" /></label>
+            <label><span>전화번호 끝 4자리</span><input id="phone" type="tel" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" placeholder="예: 5678" /></label>
             <label><span>메모</span><textarea id="memo" rows="5" placeholder="관리자 메모"></textarea></label>
             <div class="form-actions">
               <button type="submit">저장</button>

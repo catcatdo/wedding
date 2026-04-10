@@ -1,4 +1,4 @@
-const state = { role: 'guest', records: [], selected: null, defaultLimit: 50 };
+const state = { role: 'public', records: [], selected: null, defaultLimit: 50 };
 
 const els = {
   accessCode: document.getElementById('accessCode'),
@@ -27,8 +27,9 @@ const els = {
 };
 
 const editableByRole = {
-  guest: ['phone'],
-  user: ['phone'],
+  guest: ['description', 'bank', 'accountNumber', 'accountHolder', 'phone', 'memo'],
+  public: ['description', 'bank', 'accountNumber', 'accountHolder', 'phone', 'memo'],
+  user: ['description', 'bank', 'accountNumber', 'accountHolder', 'phone', 'memo'],
   admin: ['description', 'bank', 'accountNumber', 'accountHolder', 'phone', 'memo']
 };
 
@@ -52,12 +53,10 @@ function escapeHtml(value) {
 }
 
 function updateRoleUi() {
-  els.roleBadge.textContent = state.role === 'guest' ? 'public' : state.role;
-  els.permissionHint.textContent = state.role === 'admin'
-    ? '관리자: 전화번호, 메모, 이름/은행/계좌/거래내용을 수정할 수 있습니다.'
-    : '공개 사용자: 검색/조회 가능, 전화번호만 수정 가능. 메모와 전체 계좌번호는 숨김 처리됩니다.';
+  els.roleBadge.textContent = 'public';
+  els.permissionHint.textContent = '누구나 조회하고 수정할 수 있습니다. 전화번호는 끝 4자리만 입력하면 010-****-1234 형태로 저장됩니다.';
 
-  const editables = editableByRole[state.role];
+  const editables = editableByRole[state.role] || editableByRole.public;
   els.description.disabled = !editables.includes('description');
   els.bank.disabled = !editables.includes('bank');
   els.accountNumber.disabled = !editables.includes('accountNumber');
@@ -66,7 +65,7 @@ function updateRoleUi() {
   els.memo.disabled = !editables.includes('memo');
   els.recordForm.querySelector('button[type="submit"]').disabled = !editables.length;
   els.resetButton.disabled = false;
-  els.logoutButton.hidden = state.role !== 'admin' && state.role !== 'user';
+  els.logoutButton.hidden = true;
 }
 
 function renderResults() {
@@ -108,7 +107,7 @@ function selectRecord(record) {
   els.bank.value = record['상대은행'] || '';
   els.accountNumber.value = record['상대계좌번호'] || '';
   els.accountHolder.value = record['상대계좌예금주명'] || '';
-  els.phone.value = record['전화번호'] || '';
+  els.phone.value = getPhoneLastFour(record['전화번호'] || '');
   els.memo.value = record['메모'] || '';
   renderResults();
 }
@@ -145,8 +144,16 @@ function getPayload() {
     '전화번호': els.phone.value.trim(),
     '메모': els.memo.value.trim()
   };
-  if (state.role !== 'admin') return { '전화번호': payload['전화번호'] };
   return payload;
+}
+
+function getPhoneLastFour(value) {
+  const digits = String(value || '').replace(/[^0-9]/g, '');
+  return digits.length >= 4 ? digits.slice(-4) : digits;
+}
+
+function normalizePhoneInput() {
+  els.phone.value = getPhoneLastFour(els.phone.value);
 }
 
 async function handleLogin() {
@@ -194,6 +201,7 @@ function bindEvents() {
   els.refreshButton.addEventListener('click', () => loadRecords('').catch((error) => setStatus(error.message, 'error')));
   els.resetButton.addEventListener('click', resetForm);
   els.recordForm.addEventListener('submit', handleSubmit);
+  els.phone.addEventListener('input', normalizePhoneInput);
   els.accessCode.addEventListener('keydown', (event) => { if (event.key === 'Enter') handleLogin(); });
   els.searchInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') { event.preventDefault(); loadRecords(els.searchInput.value.trim()).catch((error) => setStatus(error.message, 'error')); } });
 }

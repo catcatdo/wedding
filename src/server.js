@@ -3,7 +3,7 @@ const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const path = require('path');
 const config = require('./config');
-const { USER_EDITABLE_FIELDS, ADMIN_EDITABLE_FIELDS } = require('./constants');
+const { ADMIN_EDITABLE_FIELDS } = require('./constants');
 const { createStore } = require('./data-store');
 const { makeSessionValue, readSessionValue, validatePhone, sanitizeRecord, formatPhone } = require('./utils');
 const { appendAuditLine } = require('./audit');
@@ -17,13 +17,12 @@ app.use(express.json());
 app.use(cookieParser());
 app.use((req, res, next) => {
   const session = readSessionValue(req.cookies.wgl_session, config.sessionSecret);
-  req.role = session?.role || 'guest';
+  req.role = session?.role || 'public';
   next();
 });
 
 function getEditableFields(role) {
-  if (role === 'admin') return ADMIN_EDITABLE_FIELDS;
-  return USER_EDITABLE_FIELDS;
+  return ADMIN_EDITABLE_FIELDS;
 }
 
 function searchRecords(records, query, role) {
@@ -64,7 +63,7 @@ app.post('/api/auth/logout', (_req, res) => {
 });
 
 app.get('/api/auth/me', (req, res) => {
-  res.json({ ok: true, role: req.role, permissions: getEditableFields(req.role) });
+  res.json({ ok: true, role: 'public', permissions: getEditableFields(req.role) });
 });
 
 app.get('/api/records', async (req, res, next) => {
