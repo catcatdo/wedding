@@ -27,7 +27,7 @@ function normalizePhone(value) {
 
 function formatPhone(value) {
   const digits = normalizePhone(value);
-  if (digits.length === 4) return `010-****-${digits}`;
+  if (digits.length === 8) return `010-${digits.slice(0, 4)}-${digits.slice(4)}`;
   if (digits.length === 11) return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
   if (digits.length === 10) return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
   return String(value || '').trim();
@@ -36,7 +36,7 @@ function formatPhone(value) {
 function validatePhone(value) {
   if (String(value || '').trim() === '') return true;
   const digits = normalizePhone(value);
-  return /^\d{4}$/.test(digits);
+  return /^\d{8}$/.test(digits) || /^010\d{8}$/.test(digits);
 }
 
 function sanitizeRecord(record, role) {

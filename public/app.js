@@ -1,10 +1,6 @@
-const state = { role: 'public', records: [], selected: null, defaultLimit: 50 };
+const state = { records: [], selected: null, defaultLimit: 50 };
 
 const els = {
-  accessCode: document.getElementById('accessCode'),
-  loginButton: document.getElementById('loginButton'),
-  logoutButton: document.getElementById('logoutButton'),
-  roleBadge: document.getElementById('roleBadge'),
   searchInput: document.getElementById('searchInput'),
   searchButton: document.getElementById('searchButton'),
   refreshButton: document.getElementById('refreshButton'),
@@ -24,13 +20,6 @@ const els = {
   accountHolder: document.getElementById('accountHolder'),
   phone: document.getElementById('phone'),
   memo: document.getElementById('memo')
-};
-
-const editableByRole = {
-  guest: ['description', 'bank', 'accountNumber', 'accountHolder', 'phone', 'memo'],
-  public: ['description', 'bank', 'accountNumber', 'accountHolder', 'phone', 'memo'],
-  user: ['description', 'bank', 'accountNumber', 'accountHolder', 'phone', 'memo'],
-  admin: ['description', 'bank', 'accountNumber', 'accountHolder', 'phone', 'memo']
 };
 
 function setStatus(message, type = '') {
@@ -53,19 +42,15 @@ function escapeHtml(value) {
 }
 
 function updateRoleUi() {
-  els.roleBadge.textContent = 'public';
-  els.permissionHint.textContent = '누구나 조회하고 수정할 수 있습니다. 전화번호는 끝 4자리만 입력하면 010-****-1234 형태로 저장됩니다.';
-
-  const editables = editableByRole[state.role] || editableByRole.public;
-  els.description.disabled = !editables.includes('description');
-  els.bank.disabled = !editables.includes('bank');
-  els.accountNumber.disabled = !editables.includes('accountNumber');
-  els.accountHolder.disabled = !editables.includes('accountHolder');
-  els.phone.disabled = !editables.includes('phone');
-  els.memo.disabled = !editables.includes('memo');
-  els.recordForm.querySelector('button[type="submit"]').disabled = !editables.length;
+  els.permissionHint.textContent = '누구나 조회하고 수정할 수 있습니다. 전화번호는 010 뒤의 숫자 8자리만 입력하면 됩니다.';
+  els.description.disabled = false;
+  els.bank.disabled = false;
+  els.accountNumber.disabled = false;
+  els.accountHolder.disabled = false;
+  els.phone.disabled = false;
+  els.memo.disabled = false;
+  els.recordForm.querySelector('button[type="submit"]').disabled = false;
   els.resetButton.disabled = false;
-  els.logoutButton.hidden = true;
 }
 
 function renderResults() {
@@ -107,15 +92,9 @@ function selectRecord(record) {
   els.bank.value = record['상대은행'] || '';
   els.accountNumber.value = record['상대계좌번호'] || '';
   els.accountHolder.value = record['상대계좌예금주명'] || '';
-  els.phone.value = getPhoneLastFour(record['전화번호'] || '');
+  els.phone.value = getPhoneSubscriberDigits(record['전화번호'] || '');
   els.memo.value = record['메모'] || '';
   renderResults();
-}
-
-async function loadMe() {
-  const data = await api('/api/auth/me');
-  state.role = data.role;
-  updateRoleUi();
 }
 
 async function loadConfig() {
@@ -147,36 +126,14 @@ function getPayload() {
   return payload;
 }
 
-function getPhoneLastFour(value) {
+function getPhoneSubscriberDigits(value) {
   const digits = String(value || '').replace(/[^0-9]/g, '');
-  return digits.length >= 4 ? digits.slice(-4) : digits;
+  if (digits.startsWith('010') && digits.length >= 11) return digits.slice(3, 11);
+  return digits.slice(0, 8);
 }
 
 function normalizePhoneInput() {
-  els.phone.value = getPhoneLastFour(els.phone.value);
-}
-
-async function handleLogin() {
-  try {
-    const data = await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ code: els.accessCode.value.trim() }) });
-    state.role = data.role;
-    els.accessCode.value = '';
-    updateRoleUi();
-    setStatus('로그인되었습니다.', 'success');
-    await loadRecords('');
-  } catch (error) {
-    setStatus(error.message, 'error');
-  }
-}
-
-async function handleLogout() {
-  await api('/api/auth/logout', { method: 'POST', body: '{}' });
-  state.role = 'guest';
-  updateRoleUi();
-  await loadRecords(els.searchInput.value.trim());
-  if (state.selected) selectRecord(state.selected);
-  else resetForm();
-  setStatus('로그아웃되었습니다.', 'success');
+  els.phone.value = getPhoneSubscriberDigits(els.phone.value);
 }
 
 async function handleSubmit(event) {
@@ -195,14 +152,11 @@ async function handleSubmit(event) {
 }
 
 function bindEvents() {
-  els.loginButton.addEventListener('click', handleLogin);
-  els.logoutButton.addEventListener('click', handleLogout);
   els.searchButton.addEventListener('click', () => loadRecords(els.searchInput.value.trim()).catch((error) => setStatus(error.message, 'error')));
   els.refreshButton.addEventListener('click', () => loadRecords('').catch((error) => setStatus(error.message, 'error')));
   els.resetButton.addEventListener('click', resetForm);
   els.recordForm.addEventListener('submit', handleSubmit);
   els.phone.addEventListener('input', normalizePhoneInput);
-  els.accessCode.addEventListener('keydown', (event) => { if (event.key === 'Enter') handleLogin(); });
   els.searchInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') { event.preventDefault(); loadRecords(els.searchInput.value.trim()).catch((error) => setStatus(error.message, 'error')); } });
 }
 
@@ -212,7 +166,7 @@ async function init() {
   renderResults();
   try {
     await loadConfig();
-    await loadMe();
+    updateRoleUi();
     await loadRecords('');
   } catch (error) {
     setStatus(error.message, 'error');

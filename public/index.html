@@ -12,25 +12,13 @@
         <div>
           <p class="eyebrow">Wedding Gift Lookup</p>
           <h1>축의금 조회 / 연락처 정리</h1>
-          <p class="lead">시놀로지 NAS 한 컨테이너로 배포할 수 있는 공개 검색·연락처 정리 앱입니다. 누구나 조회할 수 있고, 공개 사용자는 전화번호만 수정할 수 있습니다.</p>
+          <p class="lead">시놀로지 NAS 한 컨테이너로 배포할 수 있는 공개 검색·연락처 정리 앱입니다. 누구나 조회하고 기록을 바로 수정할 수 있습니다.</p>
         </div>
         <div class="privacy-card">
           <strong>개인정보 주의</strong>
-          <p>외부 공개는 리버스 프록시 + HTTPS 뒤에서만 하세요. 일반 사용자 화면에서는 계좌번호를 마스킹하고 메모를 숨깁니다.</p>
+          <p>외부 공개는 리버스 프록시 + HTTPS 뒤에서만 하세요. 이 화면은 접근코드 없이 수정할 수 있으니 공유 범위를 신중히 관리하세요.</p>
         </div>
       </header>
-
-      <section class="panel auth-panel" hidden>
-        <div class="panel-header">
-          <h2>접근 권한</h2>
-          <span id="roleBadge" class="badge">public</span>
-        </div>
-        <div class="auth-row">
-          <input id="accessCode" type="password" />
-          <button id="loginButton">권한 전환</button>
-          <button id="logoutButton" class="secondary">로그아웃</button>
-        </div>
-      </section>
 
       <section class="panel search-panel">
         <div class="search-row">
@@ -63,7 +51,13 @@
             <label><span>상대은행</span><input id="bank" type="text" /></label>
             <label><span>상대계좌번호</span><input id="accountNumber" type="text" /></label>
             <label><span>상대계좌예금주명</span><input id="accountHolder" type="text" /></label>
-            <label><span>전화번호 끝 4자리</span><input id="phone" type="tel" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" placeholder="예: 5678" /></label>
+            <label>
+              <span>전화번호</span>
+              <div class="phone-field">
+                <span class="phone-prefix">010</span>
+                <input id="phone" type="tel" inputmode="numeric" maxlength="8" pattern="[0-9]{8}" placeholder="12345678" />
+              </div>
+            </label>
             <label><span>메모</span><textarea id="memo" rows="5" placeholder="관리자 메모"></textarea></label>
             <div class="form-actions">
               <button type="submit">저장</button>

@@ -50,18 +50,18 @@ function request(method, path, body, headers = {}) {
     const phoneUpdate = await request(
       'PATCH',
       `/api/records/${encodeURIComponent(record.id)}`,
-      JSON.stringify({ '전화번호': '8888', '메모': 'public memo update' }),
+      JSON.stringify({ '전화번호': '99998888', '메모': 'public memo update' }),
       { 'Content-Type': 'application/json' }
     );
     if (phoneUpdate.status !== 200) throw new Error('public phone update failed');
     const updated = JSON.parse(phoneUpdate.body).record;
-    if (updated['전화번호'] !== '010-****-8888') throw new Error('phone update was not applied');
+    if (updated['전화번호'] !== '010-9999-8888') throw new Error('phone update was not applied');
     if (updated['메모'] !== 'public memo update') throw new Error('memo update was not applied');
 
     const verify = await request('GET', `/api/records/${encodeURIComponent(record.id)}`);
     if (verify.status !== 200) throw new Error('record fetch failed');
     const verifiedRecord = JSON.parse(verify.body).record;
-    if (verifiedRecord['전화번호'] !== '010-****-8888') throw new Error('phone update did not persist');
+    if (verifiedRecord['전화번호'] !== '010-9999-8888') throw new Error('phone update did not persist');
     if (verifiedRecord['메모'] !== 'public memo update') throw new Error('memo update did not persist');
     console.log('Smoke test passed');
   } finally {
