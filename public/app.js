@@ -1,4 +1,4 @@
-const state = { records: [], selected: null, defaultLimit: 50 };
+const state = { records: [], selected: null, defaultLimit: 50, mode: 'edit' };
 
 const els = {
   searchInput: document.getElementById('searchInput'),
@@ -11,6 +11,7 @@ const els = {
   selectedId: document.getElementById('selectedId'),
   permissionHint: document.getElementById('permissionHint'),
   recordForm: document.getElementById('recordForm'),
+  newRecordButton: document.getElementById('newRecordButton'),
   resetButton: document.getElementById('resetButton'),
   recordId: document.getElementById('recordId'),
   dateTime: document.getElementById('dateTime'),
@@ -48,7 +49,9 @@ function escapeHtml(value) {
 }
 
 function updateRoleUi() {
-  els.permissionHint.textContent = '누구나 조회하고 수정할 수 있습니다. 전화번호는 010 뒤의 숫자 8자리만 입력하면 됩니다.';
+  els.permissionHint.textContent = state.mode === 'create'
+    ? '새 기록을 추가하는 중입니다. 거래일시와 출금도 함께 입력해주세요.'
+    : '누구나 조회하고 수정할 수 있습니다. 전화번호는 010 뒤의 숫자 8자리만 입력하면 됩니다.';
   els.description.disabled = false;
   els.bank.disabled = false;
   els.accountNumber.disabled = false;
@@ -82,15 +85,18 @@ function renderResults() {
 
 function resetForm() {
   state.selected = null;
+  state.mode = 'edit';
   els.selectedId.textContent = '선택 없음';
   els.recordForm.reset();
   els.recordId.value = '';
   setFormStatus('');
+  updateRoleUi();
   renderResults();
 }
 
 function selectRecord(record, options = {}) {
   state.selected = record;
+  state.mode = 'edit';
   els.selectedId.textContent = record.id;
   els.recordId.value = record.id || '';
   els.dateTime.value = record['거래일시'] || '';
@@ -102,10 +108,25 @@ function selectRecord(record, options = {}) {
   els.phone.value = getPhoneSubscriberDigits(record['전화번호'] || '');
   els.memo.value = record['메모'] || '';
   setFormStatus('선택한 기록을 수정할 수 있습니다.', 'success');
+  updateRoleUi();
   renderResults();
   if (options.scroll && window.matchMedia('(max-width: 900px)').matches) {
     document.querySelector('.form-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
+}
+
+function startCreateMode() {
+  state.selected = null;
+  state.mode = 'create';
+  els.recordForm.reset();
+  els.recordId.value = '';
+  els.selectedId.textContent = '새 기록';
+  setFormStatus('새 기록 내용을 입력한 뒤 저장하세요.', 'success');
+  updateRoleUi();
+  if (window.matchMedia('(max-width: 900px)').matches) {
+    document.querySelector('.form-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  els.dateTime.focus();
 }
 
 async function loadConfig() {
@@ -149,19 +170,23 @@ function normalizePhoneInput() {
 
 async function handleSubmit(event) {
   event.preventDefault();
-  if (!els.recordId.value) {
+  const creating = state.mode === 'create' || !els.recordId.value;
+  if (!creating && !els.recordId.value) {
     setStatus('먼저 기록을 선택해주세요.', 'error');
     return setFormStatus('먼저 왼쪽 목록에서 기록을 선택해주세요.', 'error');
   }
   try {
-    setStatus('저장 중...');
-    setFormStatus('저장 중...');
-    const data = await api(`/api/records/${encodeURIComponent(els.recordId.value)}`, { method: 'PATCH', body: JSON.stringify(getPayload()) });
+    setStatus(creating ? '추가 중...' : '저장 중...');
+    setFormStatus(creating ? '새 기록을 추가하는 중...' : '저장 중...');
+    const path = creating ? '/api/records' : `/api/records/${encodeURIComponent(els.recordId.value)}`;
+    const method = creating ? 'POST' : 'PATCH';
+    const data = await api(path, { method, body: JSON.stringify(getPayload()) });
     const index = state.records.findIndex((record) => record.id === data.record.id);
     if (index !== -1) state.records[index] = data.record;
+    else state.records.unshift(data.record);
     selectRecord(data.record);
-    setStatus('저장되었습니다.', 'success');
-    setFormStatus('저장되었습니다.', 'success');
+    setStatus(creating ? '새 기록이 추가되었습니다.' : '저장되었습니다.', 'success');
+    setFormStatus(creating ? '새 기록이 추가되었습니다.' : '저장되었습니다.', 'success');
   } catch (error) {
     setStatus(error.message, 'error');
     setFormStatus(error.message, 'error');
@@ -171,6 +196,7 @@ async function handleSubmit(event) {
 function bindEvents() {
   els.searchButton.addEventListener('click', () => loadRecords(els.searchInput.value.trim()).catch((error) => setStatus(error.message, 'error')));
   els.refreshButton.addEventListener('click', () => loadRecords('').catch((error) => setStatus(error.message, 'error')));
+  els.newRecordButton.addEventListener('click', startCreateMode);
   els.resetButton.addEventListener('click', resetForm);
   els.recordForm.addEventListener('submit', handleSubmit);
   els.phone.addEventListener('input', normalizePhoneInput);

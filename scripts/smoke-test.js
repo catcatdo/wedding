@@ -63,6 +63,26 @@ function request(method, path, body, headers = {}) {
     const verifiedRecord = JSON.parse(verify.body).record;
     if (verifiedRecord['전화번호'] !== '010-9999-8888') throw new Error('phone update did not persist');
     if (verifiedRecord['메모'] !== 'public memo update') throw new Error('memo update did not persist');
+
+    const create = await request(
+      'POST',
+      '/api/records',
+      JSON.stringify({
+        '거래일시': '2026-04-11 15:00:00',
+        '출금': '70000',
+        '거래내용': '축의금 추가',
+        '상대은행': '카카오뱅크',
+        '상대계좌번호': '3333-12-1234567',
+        '상대계좌예금주명': '새하객',
+        '전화번호': '12345678',
+        '메모': '현장 추가'
+      }),
+      { 'Content-Type': 'application/json' }
+    );
+    if (create.status !== 201) throw new Error('record create failed');
+    const created = JSON.parse(create.body).record;
+    if (created['전화번호'] !== '010-1234-5678') throw new Error('created phone was not normalized');
+    if (created['상대계좌예금주명'] !== '새하객') throw new Error('created record was malformed');
     console.log('Smoke test passed');
   } finally {
     child.kill('SIGTERM');

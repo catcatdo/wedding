@@ -46,6 +46,14 @@ class LocalStore {
     await this.writeAll(records);
     return records[index];
   }
+
+  async create(record) {
+    const records = await this.readAll();
+    const created = normalizeRecord(record);
+    records.push(created);
+    await this.writeAll(records);
+    return created;
+  }
 }
 
 class GoogleSheetsStore {
@@ -141,6 +149,21 @@ class GoogleSheetsStore {
       requestBody: { values }
     });
     return records[index];
+  }
+
+  async create(record) {
+    const { client, sheetName, rows } = await this.readMatrix();
+    const headers = await this.ensureHeaders(client, sheetName, rows);
+    const records = (rows.slice(1) || []).map((row) => normalizeRecord(Object.fromEntries(headers.map((header, i) => [header, row[i] || '']))));
+    const created = normalizeRecord(record);
+    const values = [headers, ...records.map((entry) => headers.map((header) => entry[header] || '')), headers.map((header) => created[header] || '')];
+    await client.spreadsheets.values.update({
+      spreadsheetId: this.config.spreadsheetId,
+      range: `${sheetName}!A1`,
+      valueInputOption: 'RAW',
+      requestBody: { values }
+    });
+    return created;
   }
 }
 

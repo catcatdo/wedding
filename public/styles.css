@@ -22,6 +22,7 @@ h1, h2, p { margin-top: 0; }
 .lead, .hint, .status, .result-meta, .empty, .privacy-card p { color: var(--muted); }
 .panel-header, .result-title, .auth-row, .search-row, .form-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 .panel-header, .result-title { justify-content: space-between; }
+.form-header-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
 input, textarea, button { font: inherit; }
 input, textarea { width: 100%; border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; background: #fff; font-size: 16px; }
 .auth-row input, .search-row input { flex: 1 1 280px; }
@@ -56,6 +57,7 @@ button:disabled, input:disabled, textarea:disabled { opacity: .6; cursor: not-al
   h2 { font-size: 1.15rem; }
   .lead, .privacy-card p { font-size: .95rem; line-height: 1.5; }
   .search-row, .form-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .form-header-actions { width: 100%; justify-content: space-between; }
   .search-row input { grid-column: 1 / -1; min-width: 0; }
   button { width: 100%; padding: 14px 16px; }
   .results-list { max-height: 45vh; overflow: auto; padding-bottom: 4px; }

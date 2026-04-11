@@ -38,6 +38,21 @@ function sortRecords(records) {
   return [...records].sort((a, b) => String(b['거래일시'] || '').localeCompare(String(a['거래일시'] || '')));
 }
 
+function collectChanges(body = {}, fields) {
+  const changes = {};
+  for (const field of fields) {
+    if (Object.prototype.hasOwnProperty.call(body, field)) changes[field] = String(body[field] || '').trim();
+  }
+  return changes;
+}
+
+function normalizePhoneField(changes) {
+  if (!Object.prototype.hasOwnProperty.call(changes, '전화번호')) return null;
+  if (!validatePhone(changes['전화번호'])) return '전화번호 형식이 올바르지 않습니다.';
+  changes['전화번호'] = formatPhone(changes['전화번호']);
+  return null;
+}
+
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true, dataSource: config.dataSource, appBaseUrl: config.appBaseUrl || null });
 });
@@ -90,23 +105,33 @@ app.get('/api/records/:id', async (req, res, next) => {
 app.patch('/api/records/:id', async (req, res, next) => {
   try {
     const editable = getEditableFields(req.role);
-    const changes = {};
-    for (const field of editable) {
-      if (Object.prototype.hasOwnProperty.call(req.body || {}, field)) changes[field] = String(req.body[field] || '').trim();
-    }
+    const changes = collectChanges(req.body, editable);
     if (Object.keys(changes).length === 0) {
       return res.status(400).json({ ok: false, error: '변경할 항목이 없습니다.' });
     }
-    if (Object.prototype.hasOwnProperty.call(changes, '전화번호')) {
-      if (!validatePhone(changes['전화번호'])) {
-        return res.status(400).json({ ok: false, error: '전화번호 형식이 올바르지 않습니다.' });
-      }
-      changes['전화번호'] = formatPhone(changes['전화번호']);
-    }
+    const phoneError = normalizePhoneField(changes);
+    if (phoneError) return res.status(400).json({ ok: false, error: phoneError });
     const updated = await store.update(req.params.id, changes);
     if (!updated) return res.status(404).json({ ok: false, error: '기록을 찾을 수 없습니다.' });
     await appendAuditLine(config.auditLogPath, { action: 'record.update', role: req.role, id: req.params.id, changedFields: Object.keys(changes), ip: req.ip });
     res.json({ ok: true, record: sanitizeRecord(updated, req.role) });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post('/api/records', async (req, res, next) => {
+  try {
+    const editable = getEditableFields(req.role);
+    const creatable = ['거래일시', '출금', ...editable];
+    const changes = collectChanges(req.body, creatable);
+    if (!changes['거래일시']) return res.status(400).json({ ok: false, error: '거래일시를 입력해주세요.' });
+    if (!changes['출금']) return res.status(400).json({ ok: false, error: '출금 금액을 입력해주세요.' });
+    const phoneError = normalizePhoneField(changes);
+    if (phoneError) return res.status(400).json({ ok: false, error: phoneError });
+    const created = await store.create(changes);
+    await appendAuditLine(config.auditLogPath, { action: 'record.create', role: req.role, id: created.id, changedFields: Object.keys(changes), ip: req.ip });
+    res.status(201).json({ ok: true, record: sanitizeRecord(created, req.role) });
   } catch (error) {
     next(error);
   }
